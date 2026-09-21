@@ -21,7 +21,21 @@ public class ProductsController : ControllerBase
     {
         var products = await _productService.GetAllAsync();
 
-        return Ok(products);
+        var response = products
+        .Select(ToResponse)
+        .ToList();
+
+        return Ok(response);
+    }
+
+    private static ProductResponse ToResponse(Product product)
+    {
+        return new ProductResponse
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Price = product.Price
+        };
     }
 
     [HttpPost]
@@ -32,9 +46,11 @@ public class ProductsController : ControllerBase
             Name = request.Name,
             Price = request.Price
         };
+
         var createdProduct =
             await _productService.CreateAsync(product);
-        return Ok(createdProduct);
+
+        return Ok(ToResponse(product));
     }
 
     [HttpGet("{id:int}")]
@@ -46,7 +62,8 @@ public class ProductsController : ControllerBase
         {
             return NotFound();
         }
-        return Ok(product);
+
+        return Ok(ToResponse(product));
     }
 
     [HttpPut("{id:int}")]
