@@ -1,0 +1,70 @@
+using FirstApi.Data;
+using FirstApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FirstApi.Services;
+
+public class ProductService : IProductService
+{
+    private readonly AppDbContext _db;
+
+    public ProductService(AppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<List<Product>> GetAllAsync()
+    {
+        return await _db.Products.ToListAsync();
+    }
+
+    public async Task<Product> CreateAsync(Product product)
+    {
+        _db.Products.Add(product);
+
+        await _db.SaveChangesAsync();
+
+        return product;
+    }
+
+    public async Task<Product?> GetByIdAsync(int id)
+    {
+        return await _db.Products.FindAsync(id);
+    }
+
+    public async Task<Product?> UpdateAsync(
+    int id,
+    string name,
+    decimal price)
+    {
+        var product = await _db.Products.FindAsync(id);
+
+        if (product is null)
+        {
+            return null;
+        }
+
+        product.Name = name;
+        product.Price = price;
+
+        await _db.SaveChangesAsync();
+
+        return product;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var product = await _db.Products.FindAsync(id);
+
+        if (product is null)
+        {
+            return false;
+        }
+
+        _db.Products.Remove(product);
+
+        await _db.SaveChangesAsync();
+
+        return true;
+    }
+}
