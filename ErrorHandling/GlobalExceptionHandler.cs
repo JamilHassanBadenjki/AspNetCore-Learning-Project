@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 
 namespace FirstApi.ErrorHandling;
 
+
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
@@ -13,9 +14,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
     }
 
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
+    HttpContext httpContext,
+    Exception exception,
+    CancellationToken cancellationToken)
     {
         _logger.LogError(
             exception,
@@ -31,4 +32,15 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
 
         return true;
     }
+
+private static string GetTitle(int statusCode)
+{
+    return statusCode switch
+    {
+        StatusCodes.Status404NotFound
+            => "Resource not found",
+
+        _ => "An unexpected error occurred"
+    };
+}
 }

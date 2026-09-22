@@ -1,6 +1,9 @@
 using FirstApi.Data;
 using FirstApi.Models;
 using Microsoft.EntityFrameworkCore;
+using FirstApi.Exceptions;
+using FirstApi.Common;
+using FirstApi.Errors;
 
 namespace FirstApi.Services;
 
@@ -27,9 +30,17 @@ public class ProductService : IProductService
         return product;
     }
 
-    public async Task<Product?> GetByIdAsync(int id)
+    public async Task<Result<Product>> GetByIdAsync(int id)
     {
-        return await _db.Products.FindAsync(id);
+        var product = await _db.Products.FindAsync(id);
+
+        if (product is null)
+        {
+            return Result<Product>.Failure(
+                ProductErrors.NotFound(id));
+        }
+
+        return Result<Product>.Success(product);
     }
 
     public async Task<Product?> UpdateAsync(

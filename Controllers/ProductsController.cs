@@ -2,6 +2,7 @@ using FirstApi.DTOs;
 using FirstApi.Models;
 using FirstApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using FirstApi.Common;
 
 namespace FirstApi.Controllers;
 
@@ -56,14 +57,15 @@ public class ProductsController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var product = await _productService.GetByIdAsync(id);
+        var result =
+            await _productService.GetByIdAsync(id);
 
-        if (product is null)
+        if (result.IsFailure)
         {
-            return NotFound();
+            return ToProblem(result.Error!);
         }
 
-        return Ok(ToResponse(product));
+        return Ok(ToResponse(result.Value!));
     }
 
     [HttpPut("{id:int}")]
@@ -96,5 +98,30 @@ public class ProductsController : ControllerBase
         }
 
         return NoContent();
+    }
+
+
+
+
+    private IActionResult ToProblem(Error error)
+    {
+        var statusCode = error.Type switch
+        {
+            ErrorType.Validation
+                => StatusCodes.Status400BadRequest,
+
+            ErrorType.NotFound
+                => StatusCodes.Status404NotFound,
+
+            ErrorType.Conflict
+                => StatusCodes.Status409Conflict,
+
+            _ => StatusCodes.Status500InternalServerError
+        };
+
+        return Problem(
+            statusCode: statusCode,
+            title: error.Code,
+            detail: error.Message);
     }
 }
