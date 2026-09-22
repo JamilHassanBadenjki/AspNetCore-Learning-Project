@@ -1,7 +1,6 @@
 using FirstApi.Data;
 using FirstApi.Models;
 using Microsoft.EntityFrameworkCore;
-using FirstApi.Exceptions;
 using FirstApi.Common;
 using FirstApi.Errors;
 
@@ -43,7 +42,7 @@ public class ProductService : IProductService
         return Result<Product>.Success(product);
     }
 
-    public async Task<Product?> UpdateAsync(
+    public async Task<Result<Product>> UpdateAsync(
     int id,
     string name,
     decimal price)
@@ -52,7 +51,8 @@ public class ProductService : IProductService
 
         if (product is null)
         {
-            return null;
+            return Result<Product>.Failure(
+                ProductErrors.NotFound(id));
         }
 
         product.Name = name;
@@ -60,22 +60,23 @@ public class ProductService : IProductService
 
         await _db.SaveChangesAsync();
 
-        return product;
+        return Result<Product>.Success(product);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<Result> DeleteAsync(int id)
     {
         var product = await _db.Products.FindAsync(id);
 
         if (product is null)
         {
-            return false;
+            return Result.Failure(
+                ProductErrors.NotFound(id));
         }
 
         _db.Products.Remove(product);
 
         await _db.SaveChangesAsync();
 
-        return true;
+        return Result.Success();
     }
 }

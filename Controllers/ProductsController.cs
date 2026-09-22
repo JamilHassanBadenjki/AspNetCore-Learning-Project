@@ -70,31 +70,30 @@ public class ProductsController : ControllerBase
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(
-    int id,
-    UpdateProductRequest request)
+        int id,
+        UpdateProductRequest request)
     {
-
-        var updatedProduct = await _productService.UpdateAsync(
+        var result = await _productService.UpdateAsync(
             id,
             request.Name,
             request.Price);
 
-        if (updatedProduct is null)
+        if (result.IsFailure)
         {
-            return NotFound();
+            return ToProblem(result.Error!);
         }
 
-        return Ok(updatedProduct);
+        return Ok(ToResponse(result.Value!));
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _productService.DeleteAsync(id);
+        var result = await _productService.DeleteAsync(id);
 
-        if (!deleted)
+        if (result.IsFailure)
         {
-            return NotFound();
+            return ToProblem(result.Error!);
         }
 
         return NoContent();
