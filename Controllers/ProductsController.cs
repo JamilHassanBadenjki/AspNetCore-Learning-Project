@@ -35,23 +35,31 @@ public class ProductsController : ControllerBase
         {
             Id = product.Id,
             Name = product.Name,
+            Sku = product.Sku,
             Price = product.Price
         };
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateProductRequest request)
+    public async Task<IActionResult> Create(
+        CreateProductRequest request)
     {
         var product = new Product
         {
             Name = request.Name,
+            Sku = request.Sku,
             Price = request.Price
         };
 
-        var createdProduct =
+        var result =
             await _productService.CreateAsync(product);
 
-        return Ok(ToResponse(product));
+        if (result.IsFailure)
+        {
+            return ToProblem(result.Error!);
+        }
+
+        return Ok(ToResponse(result.Value!));
     }
 
     [HttpGet("{id:int}")]
@@ -76,6 +84,7 @@ public class ProductsController : ControllerBase
         var result = await _productService.UpdateAsync(
             id,
             request.Name,
+            request.Sku,
             request.Price);
 
         if (result.IsFailure)

@@ -1,7 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using FirstApi.Data;
-using Microsoft.EntityFrameworkCore;
 using FirstApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Data;
 
@@ -15,4 +13,18 @@ public class AppDbContext : DbContext
 
     public DbSet<Product> Products { get; set; }
 
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Sku)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        modelBuilder.Entity<Product>()
+            .HasIndex(p => p.Sku)
+            .IsUnique();
+    }
 }

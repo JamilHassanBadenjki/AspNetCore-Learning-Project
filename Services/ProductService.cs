@@ -1,8 +1,8 @@
+using FirstApi.Common;
 using FirstApi.Data;
+using FirstApi.Errors;
 using FirstApi.Models;
 using Microsoft.EntityFrameworkCore;
-using FirstApi.Common;
-using FirstApi.Errors;
 
 namespace FirstApi.Services;
 
@@ -20,13 +20,24 @@ public class ProductService : IProductService
         return await _db.Products.ToListAsync();
     }
 
-    public async Task<Product> CreateAsync(Product product)
+    public async Task<Result<Product>> CreateAsync(Product product)
     {
+        product.Sku = product.Sku.Trim().ToUpperInvariant();
+
+        var skuExists = await _db.Products
+            .AnyAsync(p => p.Sku == product.Sku);
+
+        if (skuExists)
+        {
+            return Result<Product>.Failure(
+                ProductErrors.SkuAlreadyExists(product.Sku));
+        }
+
         _db.Products.Add(product);
 
         await _db.SaveChangesAsync();
 
-        return product;
+        return Result<Product>.Success(product);
     }
 
     public async Task<Result<Product>> GetByIdAsync(int id)
@@ -43,9 +54,10 @@ public class ProductService : IProductService
     }
 
     public async Task<Result<Product>> UpdateAsync(
-    int id,
-    string name,
-    decimal price)
+        int id,
+        string name,
+        string sku,
+        decimal price)
     {
         var product = await _db.Products.FindAsync(id);
 
@@ -55,14 +67,25 @@ public class ProductService : IProductService
                 ProductErrors.NotFound(id));
         }
 
+        sku = sku.Trim().ToUpperInvariant();
+
+        var skuExists = await _db.Products
+            .AnyAsync(p => p.Sku == sku && p.Id != id);
+
+        if (skuExists)
+        {
+            return Result<Product>.Failure(
+                ProductErrors.SkuAlreadyExists(sku));
+        }
+
         product.Name = name;
+        product.Sku = sku;
         product.Price = price;
 
         await _db.SaveChangesAsync();
 
         return Result<Product>.Success(product);
     }
-
     public async Task<Result> DeleteAsync(int id)
     {
         var product = await _db.Products.FindAsync(id);
