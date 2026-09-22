@@ -1,6 +1,7 @@
 using FirstApi.Services;
 using FirstApi.Data;
 using Microsoft.EntityFrameworkCore;
+using FirstApi.ErrorHandling;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +17,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 
 app.MapControllers();
