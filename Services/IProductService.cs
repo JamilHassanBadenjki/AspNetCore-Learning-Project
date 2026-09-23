@@ -18,4 +18,5 @@ public interface IProductService
         decimal price);
 
     Task<Result> DeleteAsync(int id);
+    
 }

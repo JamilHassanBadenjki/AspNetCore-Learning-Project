@@ -3,6 +3,7 @@ using FirstApi.Data;
 using FirstApi.Errors;
 using FirstApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace FirstApi.Services;
 
@@ -35,7 +36,16 @@ public class ProductService : IProductService
 
         _db.Products.Add(product);
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+            when (IsUniqueConstraintViolation(ex))
+        {
+            return Result<Product>.Failure(
+                ProductErrors.SkuAlreadyExists(product.Sku));
+        }
 
         return Result<Product>.Success(product);
     }
@@ -82,7 +92,16 @@ public class ProductService : IProductService
         product.Sku = sku;
         product.Price = price;
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+            when (IsUniqueConstraintViolation(ex))
+        {
+            return Result<Product>.Failure(
+                ProductErrors.SkuAlreadyExists(sku));
+        }
 
         return Result<Product>.Success(product);
     }
@@ -101,5 +120,13 @@ public class ProductService : IProductService
         await _db.SaveChangesAsync();
 
         return Result.Success();
+    }
+
+    private static bool IsUniqueConstraintViolation(
+        DbUpdateException exception)
+    {
+        return exception.InnerException is SqlException sqlException
+            && (sqlException.Number == 2601
+                || sqlException.Number == 2627);
     }
 }
