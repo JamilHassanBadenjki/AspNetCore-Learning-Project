@@ -13,4 +13,7 @@ public class CreateProductRequest
 
     [Range(0.01, 9999999)]
     public decimal Price { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int CategoryId { get; set; }
 }

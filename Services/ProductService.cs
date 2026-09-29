@@ -2,8 +2,8 @@ using FirstApi.Common;
 using FirstApi.Data;
 using FirstApi.Errors;
 using FirstApi.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace FirstApi.Services;
 
@@ -32,6 +32,15 @@ public class ProductService : IProductService
         {
             return Result<Product>.Failure(
                 ProductErrors.SkuAlreadyExists(product.Sku));
+        }
+
+        var categoryExists = await _db.Categories
+            .AnyAsync(c => c.Id == product.CategoryId);
+
+        if (!categoryExists)
+        {
+            return Result<Product>.Failure(
+                CategoryErrors.NotFound(product.CategoryId));
         }
 
         _db.Products.Add(product);
@@ -67,7 +76,9 @@ public class ProductService : IProductService
         int id,
         string name,
         string sku,
-        decimal price)
+        decimal price,
+        int categoryId,
+        byte[] rowVersion)
     {
         var product = await _db.Products.FindAsync(id);
 
@@ -76,6 +87,10 @@ public class ProductService : IProductService
             return Result<Product>.Failure(
                 ProductErrors.NotFound(id));
         }
+
+        _db.Entry(product)
+            .Property(p => p.RowVersion)
+            .OriginalValue = rowVersion;
 
         sku = sku.Trim().ToUpperInvariant();
 
@@ -88,13 +103,28 @@ public class ProductService : IProductService
                 ProductErrors.SkuAlreadyExists(sku));
         }
 
+        var categoryExists = await _db.Categories
+            .AnyAsync(c => c.Id == categoryId);
+
+        if (!categoryExists)
+        {
+            return Result<Product>.Failure(
+                CategoryErrors.NotFound(categoryId));
+        }
+
         product.Name = name;
         product.Sku = sku;
         product.Price = price;
+        product.CategoryId = categoryId;
 
         try
         {
             await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result<Product>.Failure(
+                ProductErrors.ConcurrencyConflict(id));
         }
         catch (DbUpdateException ex)
             when (IsUniqueConstraintViolation(ex))

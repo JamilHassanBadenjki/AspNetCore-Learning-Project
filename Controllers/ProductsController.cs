@@ -29,17 +29,6 @@ public class ProductsController : ControllerBase
         return Ok(response);
     }
 
-    private static ProductResponse ToResponse(Product product)
-    {
-        return new ProductResponse
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Sku = product.Sku,
-            Price = product.Price
-        };
-    }
-
     [HttpPost]
     public async Task<IActionResult> Create(
         CreateProductRequest request)
@@ -48,7 +37,8 @@ public class ProductsController : ControllerBase
         {
             Name = request.Name,
             Sku = request.Sku,
-            Price = request.Price
+            Price = request.Price,
+            CategoryId = request.CategoryId
         };
 
         var result =
@@ -85,8 +75,10 @@ public class ProductsController : ControllerBase
             id,
             request.Name,
             request.Sku,
-            request.Price);
-
+            request.Price,
+            request.CategoryId,
+            request.RowVersion);
+            
         if (result.IsFailure)
         {
             return ToProblem(result.Error!);
@@ -109,6 +101,18 @@ public class ProductsController : ControllerBase
     }
 
 
+    private static ProductResponse ToResponse(Product product)
+    {
+        return new ProductResponse
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Sku = product.Sku,
+            Price = product.Price,
+            CategoryId = product.CategoryId,
+            RowVersion = product.RowVersion
+        };
+    }
 
 
     private IActionResult ToProblem(Error error)

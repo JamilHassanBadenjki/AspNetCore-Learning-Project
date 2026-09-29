@@ -19,4 +19,12 @@ public static class ProductErrors
             $"A product with SKU '{sku}' already exists.",
             ErrorType.Conflict);
     }
+
+    public static Error ConcurrencyConflict(int id)
+    {
+        return new Error(
+            "Product.ConcurrencyConflict",
+            $"Product with id {id} was modified by another user.",
+            ErrorType.Conflict);
+    }
 }

@@ -9,4 +9,8 @@ public class ProductResponse
     public string Sku { get; set; } = string.Empty;
 
     public decimal Price { get; set; }
+
+    public int CategoryId { get; set; }
+
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 }

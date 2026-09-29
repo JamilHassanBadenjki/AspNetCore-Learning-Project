@@ -15,7 +15,9 @@ public interface IProductService
         int id,
         string name,
         string sku,
-        decimal price);
+        decimal price,
+        int categoryId,
+        byte[] rowVersion);
 
     Task<Result> DeleteAsync(int id);
     
